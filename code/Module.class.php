@@ -24,6 +24,8 @@ namespace FormTools\Modules\SafeFileUpload;
 
 use FormTools\Module as FormToolsModule;
 use FormTools\Modules;
+use FormTools\Core;
+use FormTools\ListGroups;
 
 class Module extends FormToolsModule
 {
@@ -36,9 +38,24 @@ class Module extends FormToolsModule
     protected $date = "2021-01-08";
     protected $originLanguage = "en_us";
 
+    protected $group_name = "safe_file_upload_cf";
+    protected $group_setting_name = "safe_file_upload_field_group_id";
+    protected $module_name = "safe_file_upload";
+
     protected $nav = array(
         "module_name" => array("index.php", false)
     );
+
+    private function getGroupId() {
+      $db = Core::$db;
+      $query = "SELECT setting_value FROM {PREFIX}settings WHERE setting_name = :setting_name AND module = :module";
+      $db->query($query);
+      $db->bind("setting_name", $this->group_setting_name);
+      $db->bind("module", $this->module_name);
+      $db->execute();
+      $row = $db->fetch();
+      return $row["setting_value"];
+    }
     
     public function install($module_id) {
 
@@ -46,10 +63,29 @@ class Module extends FormToolsModule
             $L = $this->getLangStrings();
             return array(false, $L["cf_requirement_not_fulfiled"]);
         }
+
+        // create a new group of fields in Custom Fields
+        $info = ListGroups::addListGroup('field_types', $this->group_name);
+
+        // save the created group's ID as a setting of this module
+        $group_id = $info["group_id"];
+        $query = "INSERT INTO {PREFIX}settings (setting_name, setting_value, module) VALUES (:setting_name, :setting_value, :module)";
+        $db = Core::$db;
+        $db->query($query);
+        $db->bind("setting_name", $this->group_setting_name);
+        $db->bind("setting_value", $group_id);
+        $db->bind("module", $this->module_name);
+        $db->execute();
         return array(true, "");
     }
 
     public function uninstall($module_id) {
+        $db = Core::$db;
+        $group_id = $this->getGroupId();
+        ListGroups::deleteListGroup($group_id);
+
+        // remember that all settings are removed in global/code/Modules.class.php anyway
+
         return array(true, "");
     }
 }
