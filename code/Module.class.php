@@ -45,6 +45,7 @@ class Module extends FormToolsModule
     protected $group_setting_name = "safe_file_upload_field_group_id";
     protected $field_setting_name = "safe_file_upload_field_field_id";
     protected $field_name = "Safe File Upload";
+    protected $field_type_identifier = "safe_file_upload";
     protected $module_name = "safe_file_upload";
 
     protected $nav = array(
@@ -82,6 +83,26 @@ class Module extends FormToolsModule
       $row = $db->fetch();
       return $row["setting_value"];
     }
+
+    private function getFTFFieldTypeId() {
+      $L = $this->getLangStrings();
+
+      $ftf_module_id = Modules::getModuleIdFromModuleFolder("field_type_file");
+      if($ftf_module_id == "") {
+        // did not find Field Type File module
+        // this code is after checks if that module is enabled
+        // something is seriously wrong
+        throw new Exception($L["sfu_requirement_not_fulfiled_ftf"]);
+      }
+      $db = Core::$db;
+      $query = "SELECT field_type_id FROM {PREFIX}field_types WHERE field_type_identifier = :field_type_identifier AND managed_by_module_id = :module_id";
+      $db->query($query);
+      $db->bind("field_type_identifier", "file");
+      $db->bind("module_id", $ftf_module_id);
+      $db->execute();
+      $row = $db->fetch();
+      return $row["field_type_id"];
+    }
     
     public function install($module_id) {
 
@@ -113,7 +134,7 @@ class Module extends FormToolsModule
           $db->execute();
   
           // add a new field type for safe file uploads
-          $original_file_type_id = 12;
+          $original_file_type_id = $this->getFTFFieldTypeId();
           $request = [
             "action" => "add_field",
             "field_type_name" => $this->field_name,
