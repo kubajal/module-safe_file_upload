@@ -27,4 +27,6 @@ $L["module_name"] = "Safe File Upload";
 $L["module_description"] = "Store files uploaded in forms in a non-public directory. See more in the <b><a href=\"https://github.com/kubajal/module-safe_file_upload\"> git repo </a></b>.";
 
 // custom fields
-$L["cf_requirement_not_fulfiled"] = "Module you are trying to install depends on the Custom Fields module which appears to be missing or is disabled.";
+$L["sfu_requirement_not_fulfiled"] = "Module you are trying to install depends on the Custom Fields module which appears to be missing or is disabled.";
+$L["sfu_installation_failed"] = "Error during installation: {error}. Use <a href=\"https://github.com/kubajal/module-safe_file_upload/issues\">the git repo</a> to report any problems.";
+$L["sfu_uninstallation_failed"] = "Error during uninstallation: {error}. Use <a href=\"https://github.com/kubajal/module-safe_file_upload/issues\">the git repo</a> to report any problems.";
