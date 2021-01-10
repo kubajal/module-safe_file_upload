@@ -1,0 +1,2 @@
+safe_uploads/*
+!safe_uploads/index.php
