@@ -88,7 +88,11 @@ class Module extends FormToolsModule
         $L = $this->getLangStrings();
 		    if (!Modules::checkModuleEnabled("custom_fields")) {
             $L = $this->getLangStrings();
-            return array(false, $L["sfu_requirement_not_fulfiled"]);
+            return array(false, $L["sfu_requirement_not_fulfiled_cf"]);
+        }
+		    if (!Modules::checkModuleEnabled("field_type_file")) {
+            $L = $this->getLangStrings();
+            return array(false, $L["sfu_requirement_not_fulfiled_ftf"]);
         }
 
         Modules::instantiateModule("custom_fields");
