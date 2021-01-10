@@ -30,3 +30,5 @@ $L["module_description"] = "Store files uploaded in forms in a non-public direct
 $L["sfu_requirement_not_fulfiled"] = "Module you are trying to install depends on the Custom Fields module which appears to be missing or is disabled.";
 $L["sfu_installation_failed"] = "Error during installation: {error}. Use <a href=\"https://github.com/kubajal/module-safe_file_upload/issues\">the git repo</a> to report any problems.";
 $L["sfu_uninstallation_failed"] = "Error during uninstallation: {error}. Use <a href=\"https://github.com/kubajal/module-safe_file_upload/issues\">the git repo</a> to report any problems.";
+$L["notify_field_type_deleted"] = "Safe Upload File field deleted succefully.";
+$L["notify_cannot_delete_invalid_field_type_id"] = "Failed to delete Safe Upload File field.";

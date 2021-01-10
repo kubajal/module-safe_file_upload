@@ -135,12 +135,16 @@ class Module extends FormToolsModule
     }
 
     public function uninstall($module_id) {
+
+      Modules::instantiateModule("custom_fields");
+
       $L = $this->getLangStrings();
       $db = Core::$db;
       $db->beginTransaction();
       try {
         // delete the safe file upload field and replace all its occurances with 'textarea'
-        CoreFieldTypes::deleteFieldType($this->field_setting_name, "textbox");
+        $field_id = $this->getFieldId();
+        $field_delete_info = CustomFieldTypes::deleteFieldType($field_id, $L);
 
         $group_id = $this->getGroupId();
         ListGroups::deleteListGroup($group_id);
