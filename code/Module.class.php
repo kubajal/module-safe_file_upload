@@ -26,6 +26,8 @@ use FormTools\Module as FormToolsModule;
 use FormTools\Modules;
 use FormTools\Core;
 use FormTools\ListGroups;
+use FormTools\Modules\CustomFields\FieldTypes as CustomFieldTypes;
+use FormTools\FieldTypes as CoreFieldTypes;
 
 class Module extends FormToolsModule
 {
@@ -40,6 +42,8 @@ class Module extends FormToolsModule
 
     protected $group_name = "safe_file_upload_cf";
     protected $group_setting_name = "safe_file_upload_field_group_id";
+    protected $field_setting_name = "safe_file_upload_field_field_id";
+    protected $field_name = "safe_file_upload_field_group_id";
     protected $module_name = "safe_file_upload";
 
     protected $nav = array(
@@ -56,13 +60,26 @@ class Module extends FormToolsModule
       $row = $db->fetch();
       return $row["setting_value"];
     }
+
+    private function getFieldId() {
+      $db = Core::$db;
+      $query = "SELECT setting_value FROM {PREFIX}settings WHERE setting_name = :setting_name AND module = :module";
+      $db->query($query);
+      $db->bind("setting_name", $this->field_setting_name);
+      $db->bind("module", $this->module_name);
+      $db->execute();
+      $row = $db->fetch();
+      return $row["setting_value"];
+    }
     
     public function install($module_id) {
 
-		if (!Modules::checkModuleEnabled("custom_fields")) {
+		    if (!Modules::checkModuleEnabled("custom_fields")) {
             $L = $this->getLangStrings();
             return array(false, $L["cf_requirement_not_fulfiled"]);
         }
+
+        Modules::instantiateModule("custom_fields");
 
         // create a new group of fields in Custom Fields
         $info = ListGroups::addListGroup('field_types', $this->group_name);
@@ -76,14 +93,37 @@ class Module extends FormToolsModule
         $db->bind("setting_value", $group_id);
         $db->bind("module", $this->module_name);
         $db->execute();
+
+        // add a new field type for safe file uploads
+        $original_file_type_id = 8;
+        $request = [
+          "action" => "add_field",
+          "field_type_name" => $this->field_name,
+          "field_type_identifier" => $this->field_name,
+          "group_id" => "" . $group_id,
+          "original_field_type_id" => "" . $original_file_type_id
+        ];
+        var_dump(file_exists(__DIR__ . "\..\..\custom_fields\code\Module.class.php"));
+        $field_type_id = CustomFieldTypes::addFieldType($request);
+        $query = "INSERT INTO {PREFIX}settings (setting_name, setting_value, module) VALUES (:setting_name, :setting_value, :module)";
+        $db = Core::$db;
+        $db->query($query);
+        $db->bind("setting_name", $this->field_setting_name);
+        $db->bind("setting_value", $field_type_id);
+        $db->bind("module", $this->module_name);
+        $db->execute();
+
         return array(true, "");
     }
 
     public function uninstall($module_id) {
         $db = Core::$db;
+
+        // delete the safe file upload field and replace all its occurances with 'textarea'
+        CoreFieldTypes::deleteFieldType($this->field_setting_name, "textarea");
+
         $group_id = $this->getGroupId();
         ListGroups::deleteListGroup($group_id);
-
         // remember that all settings are removed in global/code/Modules.class.php anyway
 
         return array(true, "");
