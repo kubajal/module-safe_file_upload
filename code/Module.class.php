@@ -48,6 +48,7 @@ class Module extends FormToolsModule
     protected $field_type_identifier = "safe_file_upload";
     protected $module_name = "safe_file_upload";
     protected $safe_uploads_dir = __DIR__ . "/../safe_uploads";
+    protected $tableName = "module_safe_file_uploads";
 
     protected $nav = array(
         "module_name" => array("index.php", false)
@@ -64,7 +65,7 @@ class Module extends FormToolsModule
       $success  = @copy($tmp_path, $new_path);
       if(!$success)
       {
-        throw new Exception("Something went wrong during copying the uploaded file to the safe uploads directory.")
+        throw new Exception("Something went wrong during copying the uploaded file to the safe uploads directory.");
       }
 
       $value = $file_name . "::" . $hash . "." . $extension;
@@ -135,10 +136,26 @@ class Module extends FormToolsModule
         }
 
         Modules::instantiateModule("custom_fields");
-
+ 
         $db = Core::$db;
         $db->beginTransaction();
+
         try {
+          $charset = Core::getDbTableCharset();
+
+          // create a new table that stores info about uploads
+          $db->query("
+              CREATE TABLE {PREFIX}$this->tableName (
+                upload_id mediumint(8) unsigned NOT NULL auto_increment,
+                account_id mediumint(8) unsigned NOT NULL,
+                form_id mediumint(8) unsigned NOT NULL,
+                file_hash varchar(255) NOT NULL,
+                orignal_file_name varchar(255) NOT NULL,
+                PRIMARY KEY (upload_id)
+              ) ENGINE=InnoDB DEFAULT CHARSET=$charset
+          ");
+          $db->execute();
+
           // create a new group of fields in Custom Fields
           $info = ListGroups::addListGroup('field_types', $this->group_name);
   
@@ -185,6 +202,10 @@ class Module extends FormToolsModule
       $db = Core::$db;
       $db->beginTransaction();
       try {
+        // delete table that stores info about uploaded files
+        $db->query("DROP TABLE {PREFIX}$this->tableName");
+        $db->execute();
+        
         // delete the safe file upload field and replace all its occurances with 'textarea'
         $field_id = $this->getFieldId();
         $field_delete_info = CustomFieldTypes::deleteFieldType($field_id, $L);
