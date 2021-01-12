@@ -47,10 +47,28 @@ class Module extends FormToolsModule
     protected $field_name = "Safe File Upload";
     protected $field_type_identifier = "safe_file_upload";
     protected $module_name = "safe_file_upload";
+    protected $safe_uploads_dir = __DIR__ . "/../safe_uploads";
 
     protected $nav = array(
         "module_name" => array("index.php", false)
     );
+
+    public function handleUpload($vars) {
+      $file_field_name = $vars["field_info"]["field_name"];
+      $file_name = $_FILES[$file_field_name]["name"];
+      $tmp_path = $_FILES[$file_field_name]["tmp_name"];
+      $path_info = pathinfo($file_name);
+      $extension = $path_info['extension'];
+      $hash = substr(md5(openssl_random_pseudo_bytes(20)),-32);
+      $new_path = $this->safe_uploads_dir . "/" . $hash . "." . $extension;
+      $success  = @copy($tmp_path, $new_path);
+      if(!$success)
+      {
+        throw new Exception("Something went wrong during copying the uploaded file to the safe uploads directory.")
+      }
+
+      $value = $file_name . "::" . $hash . "." . $extension;
+    }
 
     protected function formatMessage($message_template, $values_array) {
       
